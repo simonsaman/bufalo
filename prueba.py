@@ -1,29 +1,12 @@
 # Prueba de Simón Samán (©2021)
-
 from copy import deepcopy
-
-
-matrizPrueba = """00010111
-01000000
-01000111
-01111000
-01001000
-01001010
-01011010
-00001000
-01101101
-00001000
-10010011
-00100000
-"""
+path = 'example.txt'
 bombillo = "💡"
 piso = "⬜"
-pisoIluminado = "🎆"
 pared = "⬛"
 datos = []
 minBombillos = -1
 mejorCaso = 0
-
 datosCargados = False
 opcionMenu = -1
 
@@ -31,7 +14,7 @@ opcionMenu = -1
 def cargarDatos():
   global datos
   contenido = []
-  with open('example.txt', 'r') as archivo:
+  with open(path, 'r') as archivo:
     contenido = archivo.readlines()
   salida = []
   for filaContenido in contenido:
@@ -50,7 +33,7 @@ def imprimirMatrizEmoji(matriz):
   for fila in matriz:
     for celda in fila:
       if celda == 0:
-        print (pisoIluminado,end='')
+        print (piso,end='')
       else:
         print (celda,end='')
     print ('')
@@ -58,8 +41,6 @@ def imprimirMatrizEmoji(matriz):
 def puntuacionCelda(matriz, i,j):
   #Cada bombillo alumbra su propia celda
   puntos = 1
-
-
   #Recorrido Norte
   for y in reversed(range(0,i)):
     if matriz[y][j] == pared :
@@ -127,8 +108,6 @@ def determinarPuntuaciones(matriz):
     puntuaciones.append(fila)
   return puntuaciones
 
-
-
 def generarPrioridad(matriz):
   prioridad = []
   for i in range(len(matriz)):
@@ -139,7 +118,6 @@ def generarPrioridad(matriz):
 
   prioridad.sort(reverse=True,key=lambda x: x[0])
   return prioridad
-
 
 #Búsqueda usando DFS
 def buscarSolucion(i,j,conteoBombillos, datos):
@@ -158,37 +136,40 @@ def buscarSolucion(i,j,conteoBombillos, datos):
       mejorCaso = deepcopy(puntuaciones)
     return
   else:
+    # Paso en profundidad
     (valor, k, l) = listaPrioridad[0]
     buscarSolucion(k, l, conteoBombillos + 1, datos)
     return
 
 def menu():
+  print ("____________________________________")
   if datosCargados:
-    print("(3) Mostar mejor disposición de la solucion")
+    print("(3) Mostar solución")
     print("(2) Mostrar habitación")
   else:
     print("(1) Cargar datos desde example.txt ")
   print("(0) Salir")
+  print ("____________________________________")
 
 menu()
-opcionMenu = int(input(""))
+opcionMenu = input("")
 
-while opcionMenu != 0:
-  if opcionMenu == 1:
+while opcionMenu != "0":
+  if opcionMenu == "1":
     cargarDatos()
     datosCargados = True
-  elif opcionMenu == 2:
+  elif opcionMenu == "2":
     imprimirMatrizEmoji(datos)
-  elif opcionMenu == 3:
+  elif opcionMenu == "3":
     for y in range(len(datos)):
       for x in range(len(datos[y])):
         if datos[y][x]  == pared:
           continue
         nuevosDatos = deepcopy(datos)
-        buscarSolucion(y,x,0, nuevosDatos)
+        buscarSolucion(y,x,1, nuevosDatos)
     imprimirMatrizEmoji(mejorCaso)
     print("Numero mínimo de bombillos: ",minBombillos)
   else:
     print("Opción no reconocida")
   menu()
-  opcionMenu = int(input(""))
+  opcionMenu = input("")

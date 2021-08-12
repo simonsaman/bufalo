@@ -7,7 +7,8 @@ El siguente código es la respuesta a un ejercicio técnico propuesto por Bufalo
 ```
 python3 prueba.py
 ```
-Navegar el menú introduciendo el número correspondiete a la accion deseada.
-Para cargar nuevos casos se debe reemplazar el archivo `readme.txt`
-
+- Navegar el menú introduciendo el número correspondiete a la accion deseada.  
+- Para cargar nuevos casos se debe reemplazar la línea `03` del script, con la nueva ruta del archivo.  
+- Existen ejemplos adicionales el la carpeta `extraExamples`
+___
 © 2021 Simón Samán
