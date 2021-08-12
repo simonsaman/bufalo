@@ -1,5 +1,8 @@
 # Prueba de Simón Samán (©2021)
 
+from copy import deepcopy
+
+
 matrizPrueba = """00010111
 01000000
 01000111
@@ -18,144 +21,174 @@ piso = "⬜"
 pisoIluminado = "🎆"
 pared = "⬛"
 datos = []
-puntuaciones = []
-totalBombillos = 0
 minBombillos = -1
+mejorCaso = 0
 
-def cargarDatos(matriz):
-  salida = []
-  fila = []
-  for celda in matriz:
-    if celda == '0':
-      fila.append(piso)
-    elif celda == '1':
-      fila.append(pared)
-    elif celda == '\n':
-      salida.append(fila)
-      fila = []
+datosCargados = False
+opcionMenu = -1
+
+
+def cargarDatos():
   global datos
+  contenido = []
+  with open('example.txt', 'r') as archivo:
+    contenido = archivo.readlines()
+  salida = []
+  for filaContenido in contenido:
+    fila = []
+    for caracter in filaContenido:
+      if caracter == '0':
+        fila.append(piso)
+      elif caracter == '1':
+        fila.append(pared)
+      elif caracter == '\n':
+        salida.append(fila)
   datos = salida
 
-def imprimirMatriz(matriz, terminal):
-  for fila in matriz:
-    for celda in fila:
-      print (celda,end=terminal)
-    print ('')
 
 def imprimirMatrizEmoji(matriz):
   for fila in matriz:
     for celda in fila:
-      if celda == -1:
+      if celda == 0:
         print (pisoIluminado,end='')
       else:
         print (celda,end='')
     print ('')
 
-def puntuacionCelda(i,j):
-  puntuacion = 1
+def puntuacionCelda(matriz, i,j):
+  #Cada bombillo alumbra su propia celda
+  puntos = 1
+
 
   #Recorrido Norte
   for y in reversed(range(0,i)):
-    if datos[y][j] == pared :
+    if matriz[y][j] == pared :
       break
-    puntuacion += 1
+    if matriz[y][j] == piso:
+      puntos += 1
+      continue
+    if matriz[y][j] == bombillo:
+      return 0
+    if matriz[y][j] <= 1 :
+      continue
+    puntos+= 1
 
   #Recorrido Este
   for x in reversed(range(len(datos[i])-1, j, -1)):
-    if datos[i][x] == pared :
+    if matriz[i][x] == pared :
       break
-    puntuacion += 1
+    if matriz[i][x] == bombillo:
+      return 0
+    if matriz[i][x] == piso:
+      puntos+= 1
+      continue
+    if matriz[i][x] <= 1 :
+      continue
+    puntos+= 1
+  
   #Recorrido Sur
   for y in reversed(range(len(datos)-1,i,-1)):
-    if datos[y][j] == pared :
+    if matriz[y][j] == pared:
       break
-    puntuacion += 1
+    if matriz[y][j] == bombillo:
+      return 0
+    if matriz[y][j] == piso:
+      puntos += 1
+      continue
+    if matriz[y][j] <= 1 :
+      continue
+    puntos += 1
   
   #Recorrido Oeste
   for x in reversed(range(0,j)):
-    if datos[i][x] == pared:
+    if matriz[i][x] == pared:
       break
-    puntuacion += 1
+    if matriz[i][x] == bombillo:
+      return 0
+    if matriz[i][x] == piso:
+      puntos += 1
+      continue
+    if matriz[i][x] <= 1:
+      continue
+    puntos += 1
   
-  return puntuacion
+  return puntos
 
 
-def determinarPuntuaciones():
-  global puntuaciones
-  for i in range (0,len(datos)):
+def determinarPuntuaciones(matriz):
+  puntuaciones = []
+  for i in range (0,len(matriz)):
     fila = []
-    for j in range (0, len(datos[0])):
-      if (datos[i][j] == pared ):
-        fila.append(pared)
+    for j in range (0, len(matriz[0])):
+      if (matriz[i][j] == pared ) or (matriz[i][j] == bombillo):
+        fila.append(matriz[i][j])
         continue
-      fila.append(puntuacionCelda(i,j))
+      fila.append(puntuacionCelda(matriz, i, j))
     puntuaciones.append(fila)
+  return puntuaciones
 
-def recalcularPuntuaciones():
-  global puntuaciones
-  for i in range (0,len(puntuaciones)):
-    fila = []
-    for j in range (0, len(puntuaciones[0])):
-      if puntuaciones[i][j] == bombillo or puntuaciones[i][j] == -1 or puntuaciones[i][j] == pared :
+
+
+def generarPrioridad(matriz):
+  prioridad = []
+  for i in range(len(matriz)):
+    for j in range(len(matriz[0])):
+      if matriz[i][j] == bombillo or matriz[i][j] == pared or matriz[i][j] <= 0 :
         continue
-      puntuaciones[i][j] = puntuacionCelda(i,j)
+      prioridad.append((matriz[i][j],i,j))
 
-def encontrarMayor():
-  mayor = (-1, -1, -1)
-  for i in range (0,len(puntuaciones)):
-    for j in range (0, len(puntuaciones[0])):
-      if (puntuaciones[i][j] == bombillo) or (puntuaciones[i][j] == pared) :
-        continue
-      if (puntuaciones[i][j] > 0 and puntuaciones[i][j] > mayor[2] ):
-        mayor = (i,j,puntuaciones[i][j])
-      
-  return mayor    
-
-def limpiarBombillos(i,j):
-  global puntuaciones
-  puntuaciones[i][j] = bombillo
-  #Recorrido Norte
-  for y in reversed(range(0,i)):
-    if puntuaciones[y][j] == pared :
-      break
-    puntuaciones[y][j] = -1
-    
-  #Recorrido Este
-  for x in reversed(range(len(datos[i])-1, j, -1)):
-    if puntuaciones[i][x] == pared :
-      break
-    puntuaciones[i][x] = -1
-    
-  #Recorrido Sur
-  for y in reversed(range(len(datos)-1,i,-1)):
-    if puntuaciones[y][j] == pared :
-      break
-    puntuaciones[y][j] = -1
-  
-  #Recorrido Oeste
-  for x in reversed(range(0,j)):
-    if puntuaciones[i][x] == pared :
-      break
-    puntuaciones[i][x] = -1
+  prioridad.sort(reverse=True,key=lambda x: x[0])
+  return prioridad
 
 
+#Búsqueda usando DFS
+def buscarSolucion(i,j,conteoBombillos, datos):
+  global minBombillos, mejorCaso
+  # Podando soluciones inviables
+  if (minBombillos != -1 and conteoBombillos >= minBombillos):
+    return
+  datos[i][j] = bombillo
+  puntuaciones = determinarPuntuaciones(datos)
+  listaPrioridad = generarPrioridad(puntuaciones)
+  #Condicion de parada
+  if len(listaPrioridad) == 0:
+    # Nuevo minimo
+    if (conteoBombillos < minBombillos or minBombillos == -1):
+      minBombillos = conteoBombillos
+      mejorCaso = deepcopy(puntuaciones)
+    return
+  else:
+    (valor, k, l) = listaPrioridad[0]
+    buscarSolucion(k, l, conteoBombillos + 1, datos)
+    return
 
+def menu():
+  if datosCargados:
+    print("(3) Mostar mejor disposición de la solucion")
+    print("(2) Mostrar habitación")
+  else:
+    print("(1) Cargar datos desde example.txt ")
+  print("(0) Salir")
 
-cargarDatos(matrizPrueba)
-imprimirMatriz(datos,'')
-determinarPuntuaciones()
-imprimirMatriz(puntuaciones,' ')
-while True:
-  (mayorI, mayorJ, mayor) = encontrarMayor()
-  if mayor == -1:
-    break
-  limpiarBombillos(mayorI,mayorJ)
-  totalBombillos+=1
-  recalcularPuntuaciones()
-  imprimirMatriz(puntuaciones,' ')
+menu()
+opcionMenu = int(input(""))
 
-imprimirMatrizEmoji(puntuaciones)
-print(totalBombillos)
-
-
-
+while opcionMenu != 0:
+  if opcionMenu == 1:
+    cargarDatos()
+    datosCargados = True
+  elif opcionMenu == 2:
+    imprimirMatrizEmoji(datos)
+  elif opcionMenu == 3:
+    for y in range(len(datos)):
+      for x in range(len(datos[y])):
+        if datos[y][x]  == pared:
+          continue
+        nuevosDatos = deepcopy(datos)
+        buscarSolucion(y,x,0, nuevosDatos)
+    imprimirMatrizEmoji(mejorCaso)
+    print("Numero mínimo de bombillos: ",minBombillos)
+  else:
+    print("Opción no reconocida")
+  menu()
+  opcionMenu = int(input(""))
